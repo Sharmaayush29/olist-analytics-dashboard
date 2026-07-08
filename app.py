@@ -832,6 +832,122 @@ else:
             for r in recs:
                 st.markdown(f"<div style='background-color:#141416; padding:10px; border-radius:6px; border-left:3px solid {risk_color}; margin-bottom:8px; font-size:13px;'>{r}</div>", unsafe_allow_html=True)
 
+    # ------------------ COHORT INSIGHTS & ACTION RECOMMENDATIONS ------------------
+    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+    st.markdown("### 03 — Dynamic Cohort Insights & Priority Action Plan")
+    
+    if len(df) > 0:
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            st.markdown("#### 🔍 Dynamic Cohort Insights")
+            
+            # 1. Performance Insight
+            st.markdown(f"""
+            <div style="background-color:#141416; padding:15px; border-radius:8px; border-left:4px solid #3b82f6; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:700; font-size:14px; color:#fafafa;">Cohort Churn Performance</span>
+                    <span style="font-weight:800; font-size:18px; color:#93c5fd;">{churn_rate:.2f}%</span>
+                </div>
+                <p style="font-size:12px; color:#a1a1aa; margin:5px 0 0 0;">Cohort size: {len(df):,} profiles ({len(df)/len(df_raw)*100:.1f}% of total), {churn_count:,} churned. Baseline target is under 15%.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 2. Month-to-month Insight
+            mtm_df = df[df["Contract"] == "Month-to-month"]
+            mtm_count = len(mtm_df)
+            mtm_churn = len(mtm_df[mtm_df["Churn"] == 1])
+            mtm_churn_rate = (mtm_churn / mtm_count * 100) if mtm_count > 0 else 0
+            st.markdown(f"""
+            <div style="background-color:#141416; padding:15px; border-radius:8px; border-left:4px solid #f43f5e; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:700; font-size:14px; color:#fafafa;">Month-to-Month Contract Exposure</span>
+                    <span style="font-weight:800; font-size:18px; color:#fca5a5;">{mtm_churn_rate:.1f}%</span>
+                </div>
+                <p style="font-size:12px; color:#a1a1aa; margin:5px 0 0 0;">Active month-to-month accounts stand at {mtm_count:,} profiles. They represent the largest relative churn source in the segment.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 3. Technology / Billing friction Insight
+            fiber_df = df[df["InternetService"] == "Fiber optic"]
+            fiber_count = len(fiber_df)
+            fiber_churn = len(fiber_df[fiber_df["Churn"] == 1])
+            fiber_churn_rate = (fiber_churn / fiber_count * 100) if fiber_count > 0 else 0
+
+            echeck_df = df[df["PaymentMethod"] == "Electronic check"]
+            echeck_count = len(echeck_df)
+            echeck_churn = len(echeck_df[echeck_df["Churn"] == 1])
+            echeck_churn_rate = (echeck_churn / echeck_count * 100) if echeck_count > 0 else 0
+
+            if fiber_count > 0:
+                st.markdown(f"""
+                <div style="background-color:#141416; padding:15px; border-radius:8px; border-left:4px solid #8b5cf6; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:700; font-size:14px; color:#fafafa;">Fiber Optic Technology Churn Risk</span>
+                        <span style="font-weight:800; font-size:18px; color:#c084fc;">{fiber_churn_rate:.1f}%</span>
+                    </div>
+                    <p style="font-size:12px; color:#a1a1aa; margin:5px 0 0 0;">Fiber optic customers show a churn rate of {fiber_churn_rate:.1f}% ({fiber_churn:,} churned out of {fiber_count:,}). Indicative of competitor price wars.</p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="background-color:#141416; padding:15px; border-radius:8px; border-left:4px solid #f59e0b; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:700; font-size:14px; color:#fafafa;">Electronic Check Billing Friction</span>
+                        <span style="font-weight:800; font-size:18px; color:#fde047;">{echeck_churn_rate:.1f}%</span>
+                    </div>
+                    <p style="font-size:12px; color:#a1a1aa; margin:5px 0 0 0;">Electronic Check manual billing results in {echeck_churn_rate:.1f}% churn rate inside this cohort ({echeck_churn:,} churned).</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+        with col_c2:
+            st.markdown("#### ⚡ Cohort Action Recommendations")
+
+            # Recommendation 1: MTM Conversion Campaign
+            val_saved_contract = int(mtm_churn * 0.4 * 64.76 * 12)
+            st.markdown(f"""
+            <div style="background-color:#141416; padding:15px; border-radius:8px; border-left:4px solid #10b981; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <span style="font-weight:700; font-size:14px; color:#fafafa;">Long-Term Contract Incentive Campaign</span><br/>
+                        <span style="background-color:#f43f5e22; color:#fca5a5; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;">High Priority</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-weight:800; font-size:18px; color:#86efac;">${val_saved_contract/1000:.1f}k</span><br/>
+                        <span style="font-size:9px; color:#52525b;">Est. Annual Value</span>
+                    </div>
+                </div>
+                <p style="font-size:12px; color:#a1a1aa; margin:8px 0;">Incentivize active month-to-month accounts to upgrade to annual terms. Two-year plans reduce churn down to 2.8%.</p>
+                <ul style="font-size:11px; color:#a1a1aa; margin:0; padding-left:15px;">
+                    <li>Target {mtm_count:,} month-to-month contracts.</li>
+                    <li>Offer a 10% monthly rebate to switch to a 12-month contract.</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Recommendation 2: AutoPay Migration Campaign
+            val_saved_pay = int(echeck_churn * 0.35 * 64.76 * 12)
+            st.markdown(f"""
+            <div style="background-color:#141416; padding:15px; border-radius:8px; border-left:4px solid #10b981; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <span style="font-weight:700; font-size:14px; color:#fafafa;">Auto-Pay Migration Campaign</span><br/>
+                        <span style="background-color:#f59e0b22; color:#fde047; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;">Medium Priority</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-weight:800; font-size:18px; color:#86efac;">${val_saved_pay/1000:.1f}k</span><br/>
+                        <span style="font-size:9px; color:#52525b;">Est. Annual Value</span>
+                    </div>
+                </div>
+                <p style="font-size:12px; color:#a1a1aa; margin:8px 0;">Electronic check transaction methods show massive friction. Push manual payment users to credit card or bank transfer automatic billing.</p>
+                <ul style="font-size:11px; color:#a1a1aa; margin:0; padding-left:15px;">
+                    <li>Target {echeck_count:,} e-check billing users.</li>
+                    <li>Provide a $10 invoice credit for registering auto-pay services.</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("No cohort data matches filters.")
+
     # ------------------ FOOTER ------------------
     st.markdown("---")
     st.markdown("""

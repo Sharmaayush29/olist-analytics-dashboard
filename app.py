@@ -807,6 +807,31 @@ else:
             st.markdown("<p style='color:#52525b; font-size:12px; margin-top:20px;'>Logistic Regression Inference Engine</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
+            # Dynamic Recommendations Section
+            st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+            st.markdown("#### 📋 Recommended Actions to Reduce Risk:")
+            
+            recs = []
+            if s_contract == "Month-to-month":
+                recs.append("📜 **Contract Upgrade**: Convert to a 1-year or 2-year contract. Month-to-month contracts are the #1 contributor to churn risk.")
+            if s_payment == "Electronic check":
+                recs.append("💳 **Billing Method**: Encourage enrollment in Auto-Pay (Credit Card/Bank Transfer) to reduce payment transaction friction.")
+            if s_security == "No" and s_internet != "No":
+                recs.append("🔒 **Online Security**: Bundle Online Security service. Customers without security churn at a 49% higher rate.")
+            if s_support == "No" and s_internet != "No":
+                recs.append("🛠️ **Tech Support**: Promote Tech Support bundling. Providing technical support decreases customer complaints and retention drops.")
+            if s_charges > 75:
+                recs.append(f"💰 **Pricing Optimization**: Monthly charges are high (${s_charges:.2f}). Consider offering a multi-service bundle discount to improve value perception.")
+            if s_tenure < 12:
+                recs.append("⏳ **Early Lifecycle Care**: Customer is in their first year. Proactively schedule check-in calls or feedback surveys at months 3, 6, and 12.")
+
+            # If no risk factors are present
+            if not recs:
+                recs.append("✅ **Loyalty Profile**: Customer settings reflect a highly stable, low-risk retention profile. Maintain standard billing and services.")
+
+            for r in recs:
+                st.markdown(f"<div style='background-color:#141416; padding:10px; border-radius:6px; border-left:3px solid {risk_color}; margin-bottom:8px; font-size:13px;'>{r}</div>", unsafe_allow_html=True)
+
     # ------------------ FOOTER ------------------
     st.markdown("---")
     st.markdown("""

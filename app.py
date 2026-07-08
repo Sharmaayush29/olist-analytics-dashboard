@@ -538,7 +538,7 @@ else:
                 barmode='group', margin=dict(t=10, b=10, l=10, r=10), height=200,
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(color="#fafafa"),
-                yaxis=dict(gridcolor="rgba(255,255,255,0.04)", suffix="%")
+                yaxis=dict(gridcolor="rgba(255,255,255,0.04)", ticksuffix="%")
             )
             st.plotly_chart(fig_add, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)

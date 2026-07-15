@@ -110,8 +110,8 @@ def base_layout(**kw):
     lay = dict(
         paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
         font=dict(color="#0f172a", family="Inter, sans-serif", size=12),
-        xaxis=dict(**AXIS_STYLE, automargin=True),
-        yaxis=dict(**AXIS_STYLE, automargin=True),
+        xaxis=dict(**AXIS_STYLE),
+        yaxis=dict(**AXIS_STYLE),
         margin=dict(l=80, r=50, t=65, b=80, pad=6),
         legend=dict(bgcolor="#f8fafc", bordercolor="#e2e8f0", borderwidth=1,
                     font=dict(color="#0f172a",size=12)),
@@ -123,8 +123,8 @@ def base_layout(**kw):
 
 def hbar_layout(**kw):
     lay = base_layout()
-    lay["xaxis"] = dict(**AXIS_STYLE, showgrid=True, automargin=True, ticksuffix=" ")
-    lay["yaxis"] = dict(**AXIS_STYLE, showgrid=False, automargin=True,
+    lay["xaxis"] = dict(**AXIS_STYLE, showgrid=True, ticksuffix=" ")
+    lay["yaxis"] = dict(**AXIS_STYLE, showgrid=False,
                         tickfont=dict(color="#0f172a",size=11,family="Inter, sans-serif"))
     lay["margin"] = dict(l=210, r=60, t=65, b=60, pad=6)
     lay.update(kw)
@@ -132,7 +132,7 @@ def hbar_layout(**kw):
 
 def rot_layout(**kw):
     lay = base_layout(**kw)
-    lay["xaxis"] = dict(**AXIS_STYLE, automargin=True, tickangle=-35)
+    lay["xaxis"] = dict(**AXIS_STYLE, tickangle=-35)
     lay["margin"] = dict(l=80, r=50, t=65, b=110, pad=6)
     lay.update(kw)
     return lay

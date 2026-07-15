@@ -1277,12 +1277,12 @@ elif page == "ℹ️ About Project":
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <a href="https://github.com/Sharmaayush29/telco-churn-streamlit" target="_blank"
+          <a href="https://github.com/Sharmaayush29/olist-analytics-dashboard" target="_blank"
              style="display:flex;align-items:center;gap:10px;background:#0f172a;color:white;
                     padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
             🐙 View GitHub Repository
           </a>
-          <a href="https://www.linkedin.com" target="_blank"
+          <a href="https://www.linkedin.com/in/ayush-sharma-014763319?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank"
              style="display:flex;align-items:center;gap:10px;background:#0077b5;color:white;
                     padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
             💼 LinkedIn Profile
@@ -1298,7 +1298,7 @@ with fc1:
 with fc2:
     st.markdown(
         '<div style="text-align:right;">'
-        '<a href="https://github.com/Sharmaayush29/telco-churn-streamlit" class="footer-link" target="_blank">🐙 GitHub</a>'
+        '<a href="https://github.com/Sharmaayush29/olist-analytics-dashboard" class="footer-link" target="_blank">🐙 GitHub</a>'
         ' &nbsp;|&nbsp; '
-        '<a href="https://www.linkedin.com" class="footer-link" target="_blank">💼 LinkedIn</a>'
+        '<a href="https://www.linkedin.com/in/ayush-sharma-014763319?utm_source=share_via&utm_content=profile&utm_medium=member_android" class="footer-link" target="_blank">💼 LinkedIn</a>'
         '</div>', unsafe_allow_html=True)

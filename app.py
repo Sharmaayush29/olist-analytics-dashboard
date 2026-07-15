@@ -8,6 +8,10 @@ import pickle
 import os
 import io
 from datetime import datetime, date
+from sklearn.metrics import (accuracy_score, precision_score, recall_score,
+                              f1_score, confusion_matrix)
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -136,11 +140,6 @@ def rot_layout(**kw):
 def dl_csv(df, fname):
     return df.to_csv(index=False).encode("utf-8")
 
-def dl_excel(df):
-    buf = io.BytesIO()
-    df.to_excel(buf, index=False, engine="openpyxl")
-    return buf.getvalue()
-
 # ─────────────────────────────────────────────────────────────────────────────
 #  SIDEBAR  — page selector + page-specific filters
 # ─────────────────────────────────────────────────────────────────────────────
@@ -180,21 +179,27 @@ with st.sidebar:
         st.markdown('<div class="filter-header">📅 Date Range</div>', unsafe_allow_html=True)
         min_d = df_full["order_purchase_timestamp"].min().date()
         max_d = df_full["order_purchase_timestamp"].max().date()
-        d1, d2 = st.date_input("Order Date Range", value=(min_d, max_d),
+        date_range = st.date_input("Order Date Range", value=(min_d, max_d),
                                min_value=min_d, max_value=max_d)
-        if isinstance(d1, date) and isinstance(d2, date):
+        try:
+            d1, d2 = date_range
             df = df[(df["order_purchase_timestamp"].dt.date >= d1) &
                     (df["order_purchase_timestamp"].dt.date <= d2)]
+        except (TypeError, ValueError):
+            pass  # user hasn't picked both dates yet
 
     elif page == "📈 Sales Analytics":
         st.markdown('<div class="filter-header">📅 Date Range</div>', unsafe_allow_html=True)
         min_d = df_full["order_purchase_timestamp"].min().date()
         max_d = df_full["order_purchase_timestamp"].max().date()
-        d1, d2 = st.date_input("Order Date Range", value=(min_d, max_d),
+        date_range = st.date_input("Order Date Range", value=(min_d, max_d),
                                min_value=min_d, max_value=max_d)
-        if isinstance(d1, date) and isinstance(d2, date):
+        try:
+            d1, d2 = date_range
             df = df[(df["order_purchase_timestamp"].dt.date >= d1) &
                     (df["order_purchase_timestamp"].dt.date <= d2)]
+        except (TypeError, ValueError):
+            pass  # user hasn't picked both dates yet
         st.markdown('<div class="filter-header">📦 Category</div>', unsafe_allow_html=True)
         cats = sorted(df_full["product_category_name_english"].dropna().unique())
         sel_cats = st.multiselect("Product Category", cats, default=cats[:8])
@@ -929,33 +934,37 @@ elif page == "📉 Model Performance":
     le_cs = mp["le_customer_state"]; le_ss = mp["le_seller_state"]
 
     @st.cache_data
-    def run_evaluation():
+    def run_evaluation(_model, _le_cat, _le_cs, _le_ss):
+        """Prefixed with _ so st.cache_data skips hashing sklearn objects."""
         eval_df = df_full.copy()
         eval_df = eval_df.dropna(subset=["payment_value","payment_installments","delivery_days",
                                           "product_category_name_english","seller_state",
                                           "customer_state","review_score"])
-        cats_known = set(le_cat.classes_)
-        cs_known   = set(le_cs.classes_)
-        ss_known   = set(le_ss.classes_)
-        eval_df = eval_df[eval_df["product_category_name_english"].isin(cats_known) &
-                           eval_df["customer_state"].isin(cs_known) &
-                           eval_df["seller_state"].isin(ss_known)]
-        eval_df["enc_cat"] = le_cat.transform(eval_df["product_category_name_english"])
-        eval_df["enc_cs"]  = le_cs.transform(eval_df["customer_state"])
-        eval_df["enc_ss"]  = le_ss.transform(eval_df["seller_state"])
-        X = eval_df[["payment_value","payment_installments","delivery_days","enc_cat","enc_ss","enc_cs"]]
+        cats_known = set(_le_cat.classes_)
+        cs_known   = set(_le_cs.classes_)
+        ss_known   = set(_le_ss.classes_)
+        eval_df = eval_df[
+            eval_df["product_category_name_english"].isin(cats_known) &
+            eval_df["customer_state"].isin(cs_known) &
+            eval_df["seller_state"].isin(ss_known)
+        ]
+        eval_df = eval_df.copy()
+        eval_df["enc_cat"] = _le_cat.transform(eval_df["product_category_name_english"])
+        eval_df["enc_cs"]  = _le_cs.transform(eval_df["customer_state"])
+        eval_df["enc_ss"]  = _le_ss.transform(eval_df["seller_state"])
+        X = eval_df[["payment_value","payment_installments","delivery_days",
+                     "enc_cat","enc_ss","enc_cs"]].copy()
         X.columns = ["payment_value","payment_installments","delivery_days",
                      "product_category_name_english","seller_state","customer_state"]
         y = eval_df["review_score"].astype(int)
-        y_pred = model.predict(X)
-        y_prob = model.predict_proba(X)
-        return y.values, y_pred, y_prob, model.classes_
+        y_pred = _model.predict(X)
+        y_prob = _model.predict_proba(X)
+        return y.values, y_pred, y_prob, _model.classes_
 
     with st.spinner("Running model evaluation on full dataset…"):
-        y_true, y_pred, y_prob, classes = run_evaluation()
+        y_true, y_pred, y_prob, classes = run_evaluation(model, le_cat, le_cs, le_ss)
 
-    from sklearn.metrics import (accuracy_score, precision_score, recall_score,
-                                  f1_score, confusion_matrix)
+    # sklearn metrics already imported at top of file
 
     acc  = accuracy_score(y_true, y_pred)
     prec = precision_score(y_true, y_pred, average="macro", zero_division=0)
@@ -1029,8 +1038,6 @@ elif page == "📉 Model Performance":
     # ROC Curves (OvR)
     st.markdown('<div class="section-badge">ROC Curves — One-vs-Rest per Score Class</div>', unsafe_allow_html=True)
     try:
-        from sklearn.preprocessing import label_binarize
-        from sklearn.metrics import roc_curve, auc
 
         y_bin = label_binarize(y_true, classes=sorted(classes))
         roc_colors = ["#dc2626","#ea580c","#ca8a04","#16a34a","#059669"]

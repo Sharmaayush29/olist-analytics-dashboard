@@ -114,7 +114,7 @@ def base_layout(**kw):
         yaxis=dict(**AXIS_STYLE),
         margin=dict(l=80, r=50, t=65, b=80, pad=6),
         legend=dict(bgcolor="#f8fafc", bordercolor="#e2e8f0", borderwidth=1,
-                    font=dict(color="#0f172a",size=12)),
+                    font=dict(color="#0f172a",size=11), orientation="h", x=0.5, xanchor="center", y=-0.2),
         coloraxis_colorbar=_CB,
         title_font=dict(color="#1e3a8a", size=15, family="Inter, sans-serif"),
     )
@@ -136,6 +136,20 @@ def rot_layout(**kw):
     lay["margin"] = dict(l=80, r=50, t=65, b=110, pad=6)
     lay.update(kw)
     return lay
+
+def render_header(title):
+    st.markdown(f"""
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+      <div>
+        <div style="font-size:0.8rem; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:0.08em;">Business Intelligence Platform</div>
+        <h1 style="margin:4px 0 0 0; font-size:1.8rem; font-weight:800; color:#1e3a8a; display:inline-block;">{title}</h1>
+      </div>
+      <div style="text-align:right; font-size:0.75rem; color:#64748b; line-height:1.3;">
+        <div>Last refreshed</div>
+        <div style="font-weight:700; color:#1d4ed8;">{datetime.now().strftime('%d %B %Y')}</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 def dl_csv(df, fname):
     return df.to_csv(index=False).encode("utf-8")
@@ -269,8 +283,7 @@ with st.sidebar:
 #  PAGE 1 — EXECUTIVE DASHBOARD
 # ══════════════════════════════════════════════════════════════════════════════
 if page == "📊 Executive Dashboard":
-    st.title("📊 Executive Business Dashboard")
-    st.markdown(f"**Snapshot:** `{datetime.now().strftime('%B %d, %Y')}`  —  Filtered to **{len(df):,}** orders")
+    render_header("Executive Business Dashboard")
 
     # ── KPI row ───────────────────────────────────────────────────────────────
     total_orders   = df["order_id"].nunique()
@@ -280,22 +293,33 @@ if page == "📊 Executive Dashboard":
     avg_delivery   = df["delivery_days"].mean()
     total_sellers  = df["seller_id"].nunique()
 
-    # Growth vs prior period (simple halves split)
+    # Month-over-Month (MoM) Growth using the last two available months in dataset
     df["_month"] = df["order_purchase_timestamp"].dt.to_period("M").dt.to_timestamp()
-    months_sorted = sorted(df["_month"].unique())
-    mid = len(months_sorted) // 2
-    half1 = df[df["_month"].isin(months_sorted[:mid])]
-    half2 = df[df["_month"].isin(months_sorted[mid:])]
+    months_sorted = sorted(df["_month"].dropna().unique())
+    
+    if len(months_sorted) >= 2:
+        last_m = months_sorted[-1]
+        prev_m = months_sorted[-2]
+        m_last = df[df["_month"] == last_m]
+        m_prev = df[df["_month"] == prev_m]
+        
+        rev_last = m_last["payment_value"].sum()
+        rev_prev = m_prev["payment_value"].sum()
+        rev_g = ((rev_last - rev_prev) / rev_prev * 100) if rev_prev > 0 else 0
+        
+        ord_last = m_last["order_id"].nunique()
+        ord_prev = m_prev["order_id"].nunique()
+        ord_g = ((ord_last - ord_prev) / ord_prev * 100) if ord_prev > 0 else 0
+        
+        cust_last = m_last["customer_unique_id"].nunique()
+        cust_prev = m_prev["customer_unique_id"].nunique()
+        cust_g = ((cust_last - cust_prev) / cust_prev * 100) if cust_prev > 0 else 0
+    else:
+        rev_g = ord_g = cust_g = 0
 
-    def growth(new, old):
-        return ((new - old) / old * 100) if old > 0 else 0
-
-    rev_g   = growth(half2["payment_value"].sum(), half1["payment_value"].sum())
-    ord_g   = growth(half2["order_id"].nunique(), half1["order_id"].nunique())
-    cust_g  = growth(half2["customer_unique_id"].nunique(), half1["customer_unique_id"].nunique())
-    rev_g_str  = f"{'▲' if rev_g>=0 else '▼'} {abs(rev_g):.1f}% Period-on-Period"
-    ord_g_str  = f"{'▲' if ord_g>=0 else '▼'} {abs(ord_g):.1f}% Period-on-Period"
-    cust_g_str = f"{'▲' if cust_g>=0 else '▼'} {abs(cust_g):.1f}% Period-on-Period"
+    rev_g_str  = f"**{'▲' if rev_g>=0 else '▼'} {abs(rev_g):.1f}%** vs Previous Month"
+    ord_g_str  = f"**{'▲' if ord_g>=0 else '▼'} {abs(ord_g):.1f}%** vs Previous Month"
+    cust_g_str = f"**{'▲' if cust_g>=0 else '▼'} {abs(cust_g):.1f}%** vs Previous Month"
 
     kpi_data = [
         ("📦","Total Orders",      f"{total_orders:,}",     ord_g_str,  "up" if ord_g>=0 else "down",   "#1d4ed8"),
@@ -322,15 +346,18 @@ if page == "📊 Executive Dashboard":
                 box-shadow:0 2px 12px rgba(0,0,0,0.05);display:flex;gap:30px;align-items:center;">
       <div><span style="font-size:.78rem;color:#64748b;font-weight:600;text-transform:uppercase;">Revenue Growth</span>
            <span style="margin-left:10px;font-size:1.1rem;font-weight:800;
-                  color:{'#059669' if rev_g>=0 else '#dc2626'};">{'▲' if rev_g>=0 else '▼'} {abs(rev_g):.1f}%</span></div>
+                  color:{'#059669' if rev_g>=0 else '#dc2626'};">{'▲' if rev_g>=0 else '▼'} {abs(rev_g):.1f}%</span>
+           <span style="font-size:.75rem;color:#64748b;margin-left:4px;">vs Previous Month</span></div>
       <div><span style="font-size:.78rem;color:#64748b;font-weight:600;text-transform:uppercase;">Order Growth</span>
            <span style="margin-left:10px;font-size:1.1rem;font-weight:800;
-                  color:{'#059669' if ord_g>=0 else '#dc2626'};">{'▲' if ord_g>=0 else '▼'} {abs(ord_g):.1f}%</span></div>
+                  color:{'#059669' if ord_g>=0 else '#dc2626'};">{'▲' if ord_g>=0 else '▼'} {abs(ord_g):.1f}%</span>
+           <span style="font-size:.75rem;color:#64748b;margin-left:4px;">vs Previous Month</span></div>
       <div><span style="font-size:.78rem;color:#64748b;font-weight:600;text-transform:uppercase;">Customer Growth</span>
            <span style="margin-left:10px;font-size:1.1rem;font-weight:800;
-                  color:{'#059669' if cust_g>=0 else '#dc2626'};">{'▲' if cust_g>=0 else '▼'} {abs(cust_g):.1f}%</span></div>
+                  color:{'#059669' if cust_g>=0 else '#dc2626'};">{'▲' if cust_g>=0 else '▼'} {abs(cust_g):.1f}%</span>
+           <span style="font-size:.75rem;color:#64748b;margin-left:4px;">vs Previous Month</span></div>
       <div style="margin-left:auto;">
-        <span style="font-size:.78rem;color:#64748b;">Period: {months_sorted[0].strftime('%b %Y')} → {months_sorted[-1].strftime('%b %Y')}</span>
+        <span style="font-size:.78rem;color:#64748b;">Period: {months_sorted[0].strftime('%b %Y') if months_sorted else ''} → {months_sorted[-1].strftime('%b %Y') if months_sorted else ''}</span>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -394,7 +421,7 @@ if page == "📊 Executive Dashboard":
 #  PAGE 2 — SALES ANALYTICS
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "📈 Sales Analytics":
-    st.title("📈 Sales Performance & Revenue Analytics")
+    render_header("Sales Performance & Revenue Analytics")
     st.caption(f"Showing **{len(df):,}** filtered orders.")
 
     df["_month"] = df["order_purchase_timestamp"].dt.to_period("M").dt.to_timestamp()
@@ -485,7 +512,7 @@ elif page == "📈 Sales Analytics":
 #  PAGE 3 — CUSTOMER ANALYTICS
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "👥 Customer Analytics":
-    st.title("👥 Customer & Satisfaction Analytics")
+    render_header("Customer & Satisfaction Analytics")
     st.caption(f"Filtered to **{len(df):,}** orders.")
 
     col1, col2 = st.columns(2)
@@ -564,7 +591,7 @@ elif page == "👥 Customer Analytics":
 #  PAGE 4 — PRODUCT ANALYTICS
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "📦 Product Analytics":
-    st.title("📦 Product & Catalog Performance")
+    render_header("Product & Catalog Performance")
     st.caption(f"Filtered to **{len(df):,}** orders.")
 
     col1, col2 = st.columns(2)
@@ -632,7 +659,7 @@ elif page == "📦 Product Analytics":
 #  PAGE 5 — PAYMENT ANALYTICS
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "💳 Payment Analytics":
-    st.title("💳 Payment Methods & Installment Analytics")
+    render_header("Payment Methods & Installment Analytics")
     st.caption(f"Filtered to **{len(df):,}** orders.")
 
     col1, col2 = st.columns(2)
@@ -698,7 +725,7 @@ elif page == "💳 Payment Analytics":
 #  PAGE 6 — DELIVERY ANALYTICS
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "🚚 Delivery Analytics":
-    st.title("🚚 Delivery Logistics & Speed Performance")
+    render_header("Delivery Logistics & Speed Performance")
     st.caption(f"Filtered to **{len(df):,}** orders.")
 
     col1, col2 = st.columns(2)
@@ -777,7 +804,7 @@ elif page == "🚚 Delivery Analytics":
 #  PAGE 7 — ML REVIEW PREDICTOR
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "🧠 ML Review Predictor":
-    st.title("🧠 ML-Powered Customer Review Score Predictor")
+    render_header("ML-Powered Customer Review Score Predictor")
     st.markdown("Estimate the expected review rating **(1–5 ★)** using a trained Random Forest model.")
 
     if not os.path.exists(MODEL_PATH):
@@ -921,7 +948,7 @@ elif page == "🧠 ML Review Predictor":
 #  PAGE 8 — MODEL PERFORMANCE
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "📉 Model Performance":
-    st.title("📉 ML Model Performance Evaluation")
+    render_header("ML Model Performance Evaluation")
     st.markdown("End-to-end evaluation of the trained **Random Forest Classifier** on the Olist dataset.")
 
     if not os.path.exists(MODEL_PATH):
@@ -1038,7 +1065,6 @@ elif page == "📉 Model Performance":
     # ROC Curves (OvR)
     st.markdown('<div class="section-badge">ROC Curves — One-vs-Rest per Score Class</div>', unsafe_allow_html=True)
     try:
-
         y_bin = label_binarize(y_true, classes=sorted(classes))
         roc_colors = ["#dc2626","#ea580c","#ca8a04","#16a34a","#059669"]
         fig_roc = go.Figure()
@@ -1110,39 +1136,61 @@ elif page == "📉 Model Performance":
 #  PAGE 9 — BUSINESS INSIGHTS
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "💡 Business Insights":
-    st.title("💡 Automated Business Insights Engine")
+    render_header("Automated Business Insights Engine")
 
-    bc = df_full.groupby("product_category_name_english")["payment_value"].sum().idxmax().replace("_"," ").title()
-    bp = df_full["payment_type"].value_counts().idxmax().replace("_"," ").title()
+    # Dynamic calculations for stronger insights
+    total_sales_value = df_full["payment_value"].sum()
+    total_order_count = df_full["order_id"].nunique()
+
+    # Category Calculations
+    cat_gp = df_full.groupby("product_category_name_english")["payment_value"].sum()
+    top_cat_raw = cat_gp.idxmax()
+    top_cat_val = cat_gp.max()
+    top_cat_pct = (top_cat_val / total_sales_value) * 100
+    bc_clean = top_cat_raw.replace("_"," ").title()
+    bc_str = f"{bc_clean} (R${top_cat_val/1e6:.2f}M | {top_cat_pct:.1f}% share)"
+
+    # Payment Calculations
+    pay_counts = df_full["payment_type"].value_counts()
+    top_pay_raw = pay_counts.idxmax()
+    top_pay_count = pay_counts.max()
+    top_pay_pct = (top_pay_count / len(df_full)) * 100
+    bp_clean = top_pay_raw.replace("_"," ").title()
+    bp_str = f"{bp_clean} ({top_pay_count:,} tx | {top_pay_pct:.1f}% share)"
+
+    # CSAT & Delivery
     ad = df_full["delivery_days"].mean()
     sp = (df_full["review_score"] >= 4).mean()*100
     ts = df_full["seller_state"].value_counts().idxmax()
+    ts_count = df_full["seller_state"].value_counts().max()
+    ts_pct = (ts_count / len(df_full)) * 100
+    ts_str = f"{ts} ({ts_count:,} orders | {ts_pct:.1f}% share)"
 
     cards = [
-        ("#1d4ed8","🏆","Top Revenue Category",  bc,           "Highest contributor to total gross sales."),
-        ("#059669","💳","Dominant Payment Method",bp,           "Most used payment method by transaction count."),
-        ("#d97706","⭐","CSAT (≥4 Stars)",        f"{sp:.1f}%", "Orders rated 4 or 5 stars by customers."),
-        ("#db2777","🚚","Avg Delivery Time",      f"{ad:.1f}d", "Days from purchase to final delivery."),
-        ("#7c3aed","📍","Top Seller Hub",         ts,           "State with highest seller concentration."),
+        ("#1d4ed8","🏆","Top Revenue Category",  bc_str,        "Highest contributor to total gross sales value."),
+        ("#059669","💳","Dominant Payment Method",bp_str,        "Most utilized payment method by customer checkout."),
+        ("#d97706","⭐","CSAT (≥4 Stars)",        f"{sp:.1f}%",  "Share of orders receiving highly positive reviews."),
+        ("#db2777","🚚","Avg Delivery Time",      f"{ad:.1f}d",  "Average duration from purchase to courier dropoff."),
+        ("#7c3aed","📍","Top Seller Hub",         ts_str,        "State with the largest concentration of active sellers."),
     ]
     r1, r2 = st.columns(2), st.columns(3)
     for col, (color,icon,title,val,note) in zip(list(r1)+list(r2), cards):
         with col:
             st.markdown(f"""
             <div style="background:white;border-radius:12px;padding:20px;margin-bottom:14px;
-                        box-shadow:0 4px 16px rgba(0,0,0,0.06);border-left:5px solid {color};">
+                        box-shadow:0 4px 16px rgba(0,0,0,0.06);border-left:5px solid {color};height:175px;">
               <div style="font-size:1.4rem;margin-bottom:6px;">{icon}</div>
               <div style="font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">{title}</div>
-              <div style="font-size:1.4rem;font-weight:800;color:#1e3a8a;margin:6px 0;">{val}</div>
-              <div style="font-size:.85rem;color:#64748b;">{note}</div>
+              <div style="font-size:1.15rem;font-weight:800;color:#1e3a8a;margin:6px 0;line-height:1.25;">{val}</div>
+              <div style="font-size:.82rem;color:#64748b;margin-top:8px;">{note}</div>
             </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader("📊 Key Findings")
     st.info(f"""
-    - **🔴 Delivery Impact**: Orders >14 days have **78% higher** probability of 1–2 star reviews.
-    - **🟡 Seller Concentration**: Heavy concentration in **{ts}** creates regional delay risk.
-    - **🟢 #1 CSAT Driver**: Delivery Days is the strongest predictor in the ML model — outweighs price.
+    - **🔴 Delivery Impact**: Orders exceeding **14 days** delivery have a **78% higher** probability of receiving 1–2 star reviews.
+    - **🟡 Seller Concentration**: Heavy concentration in **{ts}** ({ts_pct:.1f}% of all orders) creates structural logistics risks.
+    - **🟢 #1 CSAT Driver**: Delivery Days is the strongest predictor in the ML model — far outweighing payment value.
     - **💳 Credit Card AOV**: Credit card installment orders average **22% higher AOV** than boleto.
     """)
 
@@ -1169,11 +1217,11 @@ elif page == "💡 Business Insights":
     report = f"""OLIST BUSINESS INSIGHTS REPORT
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 {'='*50}
-Top Revenue Category : {bc}
-Dominant Payment     : {bp}
+Top Revenue Category : {bc_clean} (R${top_cat_val:,.2f} | {top_cat_pct:.1f}%)
+Dominant Payment     : {bp_clean} ({top_pay_count:,} transactions | {top_pay_pct:.1f}%)
 CSAT (≥4 Stars)      : {sp:.1f}%
 Avg Delivery Time    : {ad:.1f} days
-Top Seller Hub State : {ts}
+Top Seller Hub State : {ts} ({ts_pct:.1f}% share)
 
 KEY FINDINGS
 - Delivery >14d → 78% higher negative review probability
@@ -1190,7 +1238,7 @@ KEY FINDINGS
 #  PAGE 10 — STRATEGIC ACTION PLAN
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "🎯 Strategic Action Plan":
-    st.title("🎯 Strategic Action Plan & Business Recommendations")
+    render_header("Strategic Action Plan & Business Recommendations")
 
     plans = [
         ("#1d4ed8","🚚","1. Optimize Delivery & SLA Fulfillment",
@@ -1232,7 +1280,7 @@ elif page == "🎯 Strategic Action Plan":
 #  PAGE 11 — ABOUT PROJECT
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "ℹ️ About Project":
-    st.title("ℹ️ Project Information & Technology Stack")
+    render_header("Project Information & Documentation")
 
     col1, col2 = st.columns([1.1, 0.9])
     with col1:
@@ -1242,14 +1290,40 @@ elif page == "ℹ️ About Project":
         E-Commerce Public Dataset**. Integrates a full ETL pipeline with a Random Forest
         ML model to identify key drivers of customer satisfaction.
         """)
-        st.subheader("Technology Stack")
+
+        st.subheader("📂 Project Architecture & Data Flow")
+        # Custom visual HTML/CSS Block Diagram
+        st.markdown("""
+        <div style="display:flex; flex-direction:column; gap:8px; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#eff6ff; padding:10px 14px; border-radius:6px; border-left:4px solid #1d4ed8;">
+            <span style="font-weight:700; color:#1e3a8a;">1. Raw Olist Dataset</span>
+            <span style="font-size:0.75rem; color:#64748b;">Kaggle / CSVs</span>
+          </div>
+          <div style="text-align:center; color:#94a3b8; font-size:1.1rem; line-height:1;">▼</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#ecfdf5; padding:10px 14px; border-radius:6px; border-left:4px solid #059669;">
+            <span style="font-weight:700; color:#065f46;">2. ETL Pipeline (etl_pipeline.py)</span>
+            <span style="font-size:0.75rem; color:#64748b;">Cleans, joins & filters</span>
+          </div>
+          <div style="text-align:center; color:#94a3b8; font-size:1.1rem; line-height:1;">▼</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fffbeb; padding:10px 14px; border-radius:6px; border-left:4px solid #d97706;">
+            <span style="font-weight:700; color:#b45309;">3. ML Classifier Training</span>
+            <span style="font-size:0.75rem; color:#64748b;">Random Forest / PKL</span>
+          </div>
+          <div style="text-align:center; color:#94a3b8; font-size:1.1rem; line-height:1;">▼</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fdf2f8; padding:10px 14px; border-radius:6px; border-left:4px solid #db2777;">
+            <span style="font-weight:700; color:#9d174d;">4. Production BI Platform</span>
+            <span style="font-size:0.75rem; color:#64748b;">Streamlit Dashboard</span>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.subheader("🛠️ Technology Stack")
         for icon,name,desc in [
-            ("🐍","Python 3.10+","Core language"),
+            ("🐍","Python 3.10+","Core programming language"),
             ("🐼","Pandas & NumPy","Data wrangling & feature engineering"),
             ("🤖","Scikit-learn","Random Forest review score predictor"),
             ("📊","Plotly Express / GO","Interactive data visualizations"),
             ("🎨","Streamlit + Custom CSS","Dashboard frontend & delivery"),
-            ("☁️","Streamlit Community Cloud","Production deployment"),
         ]:
             st.markdown(f"""
             <div style="display:flex;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid #f1f5f9;">
@@ -1261,26 +1335,27 @@ elif page == "ℹ️ About Project":
             </div>""", unsafe_allow_html=True)
 
     with col2:
-        st.subheader("Author")
+        st.subheader("🔗 Links & Resources")
         st.markdown("""
-        <div style="background:white;border-radius:14px;padding:26px;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
-          <div style="font-size:1.8rem;margin-bottom:8px;">👤</div>
-          <div style="font-size:1.15rem;font-weight:800;color:#1e3a8a;">Ayush Sharma</div>
-          <div style="font-size:.88rem;color:#64748b;margin:4px 0 14px;">Data Scientist · ML Engineer · Streamlit Developer</div>
-          <div style="font-size:.86rem;color:#374151;line-height:1.9;">
-            <b>Program:</b> ReadyNest Internship — Week 5<br>
-            <b>Project:</b> End-to-End Data Pipeline & Predictive Analytics<br>
-            <b>Dataset:</b> Brazilian Olist E-Commerce (Public, Kaggle)
-          </div>
-        </div>""", unsafe_allow_html=True)
+        <div style="background:white;border-radius:14px;padding:22px;box-shadow:0 4px 20px rgba(0,0,0,0.06);margin-bottom:16px;">
+          <div style="font-size:0.75rem;color:#64748b;font-weight:600;text-transform:uppercase;">Dataset Source</div>
+          <div style="font-weight:700;color:#1e3a8a;margin-top:2px;">Brazilian Olist E-Commerce</div>
+          <div style="font-size:0.85rem;color:#475569;margin-top:6px;">~100,000 public records of real customer transactions across Brazil.</div>
+          <a href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce" target="_blank" style="font-size:0.8rem;color:#1d4ed8;font-weight:600;text-decoration:none;display:inline-block;margin-top:8px;">🔗 View on Kaggle</a>
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
         <div style="display:flex;flex-direction:column;gap:10px;">
           <a href="https://github.com/Sharmaayush29/olist-analytics-dashboard" target="_blank"
              style="display:flex;align-items:center;gap:10px;background:#0f172a;color:white;
                     padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
             🐙 View GitHub Repository
+          </a>
+          <a href="https://olist-analytics-dashboard-ayushsharma.streamlit.app/" target="_blank"
+             style="display:flex;align-items:center;gap:10px;background:#ff4b4b;color:white;
+                    padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
+            🎈 Live Streamlit URL
           </a>
           <a href="https://www.linkedin.com/in/ayush-sharma-014763319?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank"
              style="display:flex;align-items:center;gap:10px;background:#0077b5;color:white;

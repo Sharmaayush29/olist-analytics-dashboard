@@ -123,16 +123,16 @@ def base_layout(**kw):
 
 def hbar_layout(**kw):
     lay = base_layout()
-    lay["xaxis"] = dict(**AXIS_STYLE, showgrid=True, ticksuffix=" ")
-    lay["yaxis"] = dict(**AXIS_STYLE, showgrid=False,
-                        tickfont=dict(color="#0f172a",size=11,family="Inter, sans-serif"))
+    lay["xaxis"] = {**AXIS_STYLE, "showgrid": True, "ticksuffix": " "}
+    lay["yaxis"] = {**AXIS_STYLE, "showgrid": False,
+                    "tickfont": dict(color="#0f172a",size=11,family="Inter, sans-serif")}
     lay["margin"] = dict(l=210, r=60, t=65, b=60, pad=6)
     lay.update(kw)
     return lay
 
 def rot_layout(**kw):
     lay = base_layout(**kw)
-    lay["xaxis"] = dict(**AXIS_STYLE, tickangle=-35)
+    lay["xaxis"] = {**AXIS_STYLE, "tickangle": -35}
     lay["margin"] = dict(l=80, r=50, t=65, b=110, pad=6)
     lay.update(kw)
     return lay

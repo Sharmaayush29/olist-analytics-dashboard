@@ -382,7 +382,7 @@ if page == "📊 Executive Dashboard":
                                      legend=dict(orientation="h", x=0, y=-0.22)))
     fig2.update_xaxes(title_text="Month", **AXIS_STYLE)
     fig2.update_yaxes(title_text="Order Volume", secondary_y=False, **AXIS_STYLE)
-    fig2.update_yaxes(title_text="Revenue (R$)", secondary_y=True, showgrid=False, **AXIS_STYLE)
+    fig2.update_yaxes(title_text="Revenue (R$)", secondary_y=True, **{**AXIS_STYLE, "showgrid": False})
     st.plotly_chart(fig2, use_container_width=True)
 
     # Download
@@ -424,7 +424,7 @@ elif page == "📈 Sales Analytics":
                                            legend=dict(orientation="h", x=0, y=-0.25)))
         fig_s1.update_xaxes(title_text="Month", **AXIS_STYLE)
         fig_s1.update_yaxes(title_text="Revenue (R$)", secondary_y=False, **AXIS_STYLE)
-        fig_s1.update_yaxes(title_text="Growth (%)", secondary_y=True, showgrid=False, **AXIS_STYLE)
+        fig_s1.update_yaxes(title_text="Growth (%)", secondary_y=True, **{**AXIS_STYLE, "showgrid": False})
         st.plotly_chart(fig_s1, use_container_width=True)
 
     with col2:
@@ -444,7 +444,7 @@ elif page == "📈 Sales Analytics":
                                            legend=dict(orientation="h", x=0, y=-0.25)))
         fig_s2.update_xaxes(title_text="Month", **AXIS_STYLE)
         fig_s2.update_yaxes(title_text="Order Count", secondary_y=False, **AXIS_STYLE)
-        fig_s2.update_yaxes(title_text="Growth (%)", secondary_y=True, showgrid=False, **AXIS_STYLE)
+        fig_s2.update_yaxes(title_text="Growth (%)", secondary_y=True, **{**AXIS_STYLE, "showgrid": False})
         st.plotly_chart(fig_s2, use_container_width=True)
 
     col3, col4 = st.columns(2)

@@ -1,53 +1,129 @@
-# Olist Brazilian E-Commerce End-to-End Analytics Pipeline & Dashboard
+# 🛍️ Olist E-Commerce Analytics Dashboard
 
-This repository contains a professional-grade business intelligence dashboard and predictive model trained on the Brazilian Olist E-Commerce dataset. It is built as part of the ReadyNest Internship program (Week 5).
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://olist-analytics-dashboard.streamlit.app)
 
-## Folder Structure
+A **production-grade Business Intelligence & ML platform** built on the Brazilian Olist E-Commerce Public Dataset.
 
-```
-cool-pasteur/
-│
-├── app.py                      # Main Streamlit dashboard application
-├── etl_pipeline.py            # Extraction, Transformation, Loading & model training script
-├── processed_olist_data.csv    # Cleaned, optimized subset of the merged Olist dataset (generated)
-├── best_model.pkl              # Trained Random Forest classifier and state/category label encoders (generated)
-├── requirements.txt            # Python library dependencies
-└── README.md                   # Project documentation (this file)
-```
+---
 
-## Setup & Execution
+## 📊 Live Demo
 
-### 1. Pre-requisites
-Ensure Python 3.10+ is installed on your system.
+👉 **[Launch the Dashboard](https://olist-analytics-dashboard.streamlit.app)**
 
-### 2. Install Dependencies
-Run the following command to install the required libraries:
+---
+
+## ✨ Features
+
+### 📈 Analytics Pages
+| Page | Description |
+|---|---|
+| 📊 Executive Dashboard | KPIs, Revenue Growth, Order Trends, Moving Averages |
+| 📈 Sales Analytics | Monthly Revenue & Orders with trend lines and growth % |
+| 👥 Customer Analytics | State distribution, loyalty segmentation, review patterns |
+| 📦 Product Analytics | Top products, weight distribution, category heatmaps |
+| 💳 Payment Analytics | Payment method share, installment analysis, AOV |
+| 🚚 Delivery Analytics | SLA performance, delivery spread, ±1σ trend bands |
+
+### 🤖 Machine Learning
+| Page | Description |
+|---|---|
+| 🧠 ML Review Predictor | Predict customer review scores with confidence & risk |
+| 📉 Model Performance | Confusion matrix, ROC curves, F1, precision, recall |
+
+### 💡 Intelligence
+| Page | Description |
+|---|---|
+| 💡 Business Insights | Automated findings, correlation matrix, KPI callouts |
+| 🎯 Strategic Action Plan | Data-driven recommendations with actionable steps |
+
+---
+
+## 🎯 Page-Specific Filters
+
+Every page shows only its relevant filters in the sidebar:
+- **Sales**: Date range + Category + Seller State
+- **Customers**: Customer State + Review Score range
+- **Products**: Category + Price range
+- **Payments**: Payment Method + Max Installments
+- **Delivery**: Customer State + On-Time/Late toggle
+
+---
+
+## 📥 Download Options
+
+Every data page includes a download button:
+- Filtered Dataset (CSV)
+- Page-specific data exports
+- Prediction results (CSV)
+- Business report (TXT)
+- Model evaluation report (TXT)
+
+---
+
+## 🛠️ Technology Stack
+
+| Tool | Purpose |
+|---|---|
+| **Python 3.10+** | Core language |
+| **Streamlit** | Dashboard frontend |
+| **Plotly** | Interactive charts |
+| **Pandas / NumPy** | Data wrangling |
+| **Scikit-learn** | Random Forest ML model |
+| **GitHub Actions** | CI/CD via Streamlit Cloud |
+
+---
+
+## 🚀 Run Locally
+
 ```bash
+# Clone the repo
+git clone https://github.com/Sharmaayush29/olist-analytics-dashboard.git
+cd olist-analytics-dashboard
+
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### 3. Generate Processed Data and Model (ETL)
-Run the ETL pipeline to process the raw datasets located under `C:\Users\ayush\Desktop\Week5_End_to_End_Pipeline\data\raw` and train the predictive classifier:
-```bash
-python etl_pipeline.py
-```
-This will generate `processed_olist_data.csv` and `best_model.pkl` in the root folder.
-
-### 4. Run the Streamlit Dashboard
-Launch the local development server:
-```bash
+# Launch
 streamlit run app.py
 ```
 
-## Features
+---
 
-- **Page 1: Executive Dashboard**: Operational and revenue overview with real-time KPI metrics and sales timeline.
-- **Page 2: Sales Analytics**: Analysis of sales distribution, top performing categories, and average order values.
-- **Page 3: Customer Analytics**: Visualizes customer state distribution, repeat purchase patterns, and satisfaction rates.
-- **Page 4: Product Analytics**: In-depth catalog metrics, product dimension distributions, and product sizes.
-- **Page 5: Payment Analytics**: Visualizes payment methods share, installments count distributions, and payment values.
-- **Page 6: Delivery Analytics**: Analysis of delivery logistics speeds, SLAs, and monthly delivery times.
-- **Page 7: Machine Learning Prediction**: Input order values, installments, delivery days, and location context to predict review scores (1-5 ★) and identify risks.
-- **Page 8: Business Insights**: Automatically generated findings on top performance areas and bottlenecks.
-- **Page 9: Strategic Action Plan**: Actionable recommendations for regional fulfillment and marketing strategy.
-- **Page 10: About Project**: Technology stack details, ETL pipeline structure, and developer credentials.
+## 📂 Project Structure
+
+```
+olist-analytics-dashboard/
+├── app.py                      # Main Streamlit application
+├── etl_pipeline.py             # ETL: raw Olist CSVs → processed dataset
+├── processed_olist_data.csv    # Cleaned, feature-engineered dataset
+├── best_model.pkl              # Trained Random Forest classifier
+├── requirements.txt            # Python dependencies
+└── README.md
+```
+
+---
+
+## 🤖 ML Model Details
+
+- **Algorithm**: Random Forest Classifier
+- **Target**: Customer Review Score (1–5 stars)
+- **Features**: Payment Value, Installments, Delivery Days, Category, Seller State, Customer State
+- **Evaluation**: Accuracy, Precision, Recall, F1 (Macro), ROC-AUC per class
+
+---
+
+## 📊 Dataset
+
+**Brazilian E-Commerce Public Dataset by Olist** — available on [Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
+
+~100,000 orders from 2016–2018 across multiple Brazilian states.
+
+---
+
+## 👤 Author
+
+**Ayush Sharma**  
+Data Scientist · ML Engineer · Streamlit Developer  
+ReadyNest Internship — Week 5 Project
+
+[![GitHub](https://img.shields.io/badge/GitHub-Sharmaayush29-black?logo=github)](https://github.com/Sharmaayush29)

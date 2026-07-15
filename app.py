@@ -171,13 +171,13 @@ if selected_payments:
     df_filtered = df_filtered[df_filtered["payment_type"].isin(selected_payments)]
 
 # Define global theme colors for Plotly
-PLOTLY_COLOR_SCALE = px.colors.sequential.Blues
+VIBRANT_PALETTE = ["#2563eb", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#06b6d4", "#f97316"]
 PLOTLY_THEME_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
     font=dict(color="#1e293b", family="Inter, sans-serif"),
-    xaxis=dict(gridcolor="#e2e8f0"),
-    yaxis=dict(gridcolor="#e2e8f0")
+    xaxis=dict(gridcolor="#f1f5f9"),
+    yaxis=dict(gridcolor="#f1f5f9")
 )
 
 # ----------------- PAGE 1: EXECUTIVE DASHBOARD -----------------
@@ -266,7 +266,8 @@ if page == "📊 Executive Dashboard":
         fig.add_trace(go.Scatter(
             x=monthly_trend["order_month_dt"], y=monthly_trend["payment_value"],
             mode='lines+markers', name='Revenue ($)',
-            line=dict(color='#2563eb', width=3)
+            line=dict(color='#2563eb', width=3),
+            fill='tozeroy', fillcolor='rgba(37, 99, 235, 0.1)'
         ))
         fig.update_layout(title="Olist Revenue Growth Timeline", **PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig, use_container_width=True)
@@ -277,7 +278,7 @@ if page == "📊 Executive Dashboard":
         fig_state = px.bar(
             state_rev, x="customer_state", y="payment_value",
             labels={"customer_state": "State", "payment_value": "Revenue ($)"},
-            color="payment_value", color_continuous_scale=px.colors.sequential.Blues
+            color="payment_value", color_continuous_scale=["#93c5fd", "#2563eb", "#1e3a8a"]
         )
         fig_state.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_state, use_container_width=True)
@@ -293,14 +294,15 @@ elif page == "📈 Sales Analytics":
         st.subheader("Monthly Revenue Chart")
         df_filtered["order_month_dt"] = df_filtered["order_purchase_timestamp"].dt.to_period("M").dt.to_timestamp()
         monthly_sales = df_filtered.groupby("order_month_dt")["payment_value"].sum().reset_index()
-        fig_sales = px.line(monthly_sales, x="order_month_dt", y="payment_value", markers=True, color_discrete_sequence=["#1e3a8a"])
+        fig_sales = px.line(monthly_sales, x="order_month_dt", y="payment_value", markers=True, color_discrete_sequence=["#2563eb"])
+        fig_sales.update_traces(fill='tozeroy', fillcolor='rgba(37, 99, 235, 0.1)')
         fig_sales.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_sales, use_container_width=True)
         
     with col2:
         st.subheader("Monthly Orders Count")
         monthly_orders = df_filtered.groupby("order_month_dt")["order_id"].nunique().reset_index()
-        fig_orders = px.bar(monthly_orders, x="order_month_dt", y="order_id", color_discrete_sequence=["#3b82f6"])
+        fig_orders = px.bar(monthly_orders, x="order_month_dt", y="order_id", color_discrete_sequence=["#8b5cf6"])
         fig_orders.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_orders, use_container_width=True)
         
@@ -309,7 +311,7 @@ elif page == "📈 Sales Analytics":
     with col3:
         st.subheader("Revenue by Category (Top 10)")
         cat_rev = df_filtered.groupby("product_category_name_english")["payment_value"].sum().reset_index().sort_values("payment_value", ascending=False).head(10)
-        fig_cat = px.bar(cat_rev, y="product_category_name_english", x="payment_value", orientation="h", color="payment_value", color_continuous_scale=px.colors.sequential.Blues)
+        fig_cat = px.bar(cat_rev, y="product_category_name_english", x="payment_value", orientation="h", color="payment_value", color_continuous_scale=["#bae6fd", "#0284c7", "#1e3a8a"])
         fig_cat_layout = PLOTLY_THEME_LAYOUT.copy()
         fig_cat_layout["yaxis"] = dict(gridcolor="#e2e8f0", autorange="reversed")
         fig_cat.update_layout(**fig_cat_layout)
@@ -323,7 +325,7 @@ elif page == "📈 Sales Analytics":
         }).reset_index()
         state_aov["AOV"] = state_aov["payment_value"] / state_aov["order_id"]
         state_aov = state_aov.sort_values("AOV", ascending=False).head(10)
-        fig_aov = px.bar(state_aov, x="customer_state", y="AOV", color="AOV", color_continuous_scale=px.colors.sequential.Viridis)
+        fig_aov = px.bar(state_aov, x="customer_state", y="AOV", color="AOV", color_continuous_scale=["#fef08a", "#f59e0b", "#b45309"])
         fig_aov.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_aov, use_container_width=True)
 
@@ -336,14 +338,14 @@ elif page == "👥 Customer Analytics":
     with col1:
         st.subheader("Customer Distribution by State")
         cust_state = df_filtered["customer_state"].value_counts().reset_index()
-        fig_cust = px.pie(cust_state, names="customer_state", values="count", hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+        fig_cust = px.pie(cust_state, names="customer_state", values="count", hole=0.4, color_discrete_sequence=VIBRANT_PALETTE)
         fig_cust.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_cust, use_container_width=True)
         
     with col2:
         st.subheader("Review Score Distribution")
         review_dist = df_filtered["review_score"].value_counts().reset_index()
-        fig_review = px.bar(review_dist, x="review_score", y="count", color_discrete_sequence=["#eab308"])
+        fig_review = px.bar(review_dist, x="review_score", y="count", color="review_score", color_discrete_sequence=VIBRANT_PALETTE)
         fig_review.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_review, use_container_width=True)
         
@@ -352,9 +354,9 @@ elif page == "👥 Customer Analytics":
     with col3:
         st.subheader("Top Buying Cities")
         top_cities = df_filtered["customer_city"].value_counts().reset_index().head(10)
-        fig_cities = px.bar(top_cities, x="count", y="customer_city", orientation="h", color_discrete_sequence=["#2563eb"])
+        fig_cities = px.bar(top_cities, x="count", y="customer_city", orientation="h", color_discrete_sequence=["#06b6d4"])
         fig_cities_layout = PLOTLY_THEME_LAYOUT.copy()
-        fig_cities_layout["yaxis"] = dict(gridcolor="#e2e8f0", autorange="reversed")
+        fig_cities_layout["yaxis"] = dict(gridcolor="#f1f5f9", autorange="reversed")
         fig_cities.update_layout(**fig_cities_layout)
         st.plotly_chart(fig_cities, use_container_width=True)
         
@@ -365,7 +367,7 @@ elif page == "👥 Customer Analytics":
             "Purchase Count": ["1 Purchase", "2+ Purchases"],
             "Customers": [sum(cust_counts == 1), sum(cust_counts > 1)]
         })
-        fig_repeat = px.pie(repeat_counts, names="Purchase Count", values="Customers", hole=0.6, color_discrete_sequence=["#3b82f6", "#10b981"])
+        fig_repeat = px.pie(repeat_counts, names="Purchase Count", values="Customers", hole=0.6, color_discrete_sequence=["#2563eb", "#10b981"])
         fig_repeat.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_repeat, use_container_width=True)
 
@@ -380,15 +382,15 @@ elif page == "📦 Product Analytics":
         top_products = df_filtered["product_id"].value_counts().reset_index().head(10)
         # short product names for visibility
         top_products["product_short_id"] = top_products["product_id"].apply(lambda x: x[:8] + "...")
-        fig_prod = px.bar(top_products, x="count", y="product_short_id", orientation="h", color_discrete_sequence=["#1d4ed8"])
+        fig_prod = px.bar(top_products, x="count", y="product_short_id", orientation="h", color_discrete_sequence=["#ec4899"])
         fig_prod_layout = PLOTLY_THEME_LAYOUT.copy()
-        fig_prod_layout["yaxis"] = dict(gridcolor="#e2e8f0", autorange="reversed")
+        fig_prod_layout["yaxis"] = dict(gridcolor="#f1f5f9", autorange="reversed")
         fig_prod.update_layout(**fig_prod_layout)
         st.plotly_chart(fig_prod, use_container_width=True)
         
     with col2:
         st.subheader("Product Weight (g) Distribution")
-        fig_weight = px.histogram(df_filtered, x="product_weight_g", nbins=50, color_discrete_sequence=["#60a5fa"])
+        fig_weight = px.histogram(df_filtered, x="product_weight_g", nbins=50, color_discrete_sequence=["#f97316"])
         fig_weight.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_weight, use_container_width=True)
         
@@ -397,7 +399,7 @@ elif page == "📦 Product Analytics":
     with col3:
         st.subheader("Category Revenue Breakdown")
         cat_perf = df_filtered.groupby("product_category_name_english")["payment_value"].sum().reset_index().sort_values("payment_value", ascending=False).head(10)
-        fig_cat_perf = px.pie(cat_perf, names="product_category_name_english", values="payment_value", hole=0.4, color_discrete_sequence=px.colors.sequential.Blues_r)
+        fig_cat_perf = px.pie(cat_perf, names="product_category_name_english", values="payment_value", hole=0.4, color_discrete_sequence=VIBRANT_PALETTE)
         fig_cat_perf.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_cat_perf, use_container_width=True)
         
@@ -418,14 +420,14 @@ elif page == "💳 Payment Analytics":
     with col1:
         st.subheader("Payment Methods Share")
         pay_counts = df_filtered["payment_type"].value_counts().reset_index()
-        fig_pay = px.pie(pay_counts, names="payment_type", values="count", hole=0.5, color_discrete_sequence=px.colors.qualitative.Safe)
+        fig_pay = px.pie(pay_counts, names="payment_type", values="count", hole=0.5, color_discrete_sequence=VIBRANT_PALETTE)
         fig_pay.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_pay, use_container_width=True)
         
     with col2:
         st.subheader("Installments Count Distribution")
         inst_counts = df_filtered["payment_installments"].value_counts().reset_index().sort_values("payment_installments").head(10)
-        fig_inst = px.bar(inst_counts, x="payment_installments", y="count", color_discrete_sequence=["#0ea5e9"])
+        fig_inst = px.bar(inst_counts, x="payment_installments", y="count", color_discrete_sequence=["#ec4899"])
         fig_inst.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_inst, use_container_width=True)
         
@@ -434,14 +436,14 @@ elif page == "💳 Payment Analytics":
     with col3:
         st.subheader("Average Payment Value by Type")
         pay_avg = df_filtered.groupby("payment_type")["payment_value"].mean().reset_index()
-        fig_pay_avg = px.bar(pay_avg, x="payment_type", y="payment_value", color_discrete_sequence=["#10b981"])
+        fig_pay_avg = px.bar(pay_avg, x="payment_type", y="payment_value", color_discrete_sequence=["#06b6d4"])
         fig_pay_avg.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_pay_avg, use_container_width=True)
         
     with col4:
         st.subheader("Operational KPI: Payment Transaction Volume")
         pay_tot = df_filtered.groupby("payment_type")["payment_value"].sum().reset_index()
-        fig_pay_tot = px.bar(pay_tot, x="payment_value", y="payment_type", orientation="h", color_discrete_sequence=["#8b5cf6"])
+        fig_pay_tot = px.bar(pay_tot, x="payment_value", y="payment_type", orientation="h", color_discrete_sequence=["#2563eb"])
         fig_pay_tot.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_pay_tot, use_container_width=True)
 
@@ -453,7 +455,7 @@ elif page == "🚚 Delivery Analytics":
     
     with col1:
         st.subheader("Delivery Speed Histogram (Days)")
-        fig_speed = px.histogram(df_filtered, x="delivery_days", nbins=50, color_discrete_sequence=["#06b6d4"])
+        fig_speed = px.histogram(df_filtered, x="delivery_days", nbins=50, color_discrete_sequence=["#f97316"])
         fig_speed.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_speed, use_container_width=True)
         
@@ -461,14 +463,14 @@ elif page == "🚚 Delivery Analytics":
         st.subheader("Delivery SLAs (On-Time vs Late)")
         late_counts = df_filtered["is_late"].value_counts().reset_index()
         late_counts["Status"] = late_counts["is_late"].map({0: "On-Time", 1: "Late"})
-        fig_late = px.pie(late_counts, names="Status", values="count", hole=0.5, color_discrete_sequence=["#10b981", "#ef4444"])
+        fig_late = px.pie(late_counts, names="Status", values="count", hole=0.5, color_discrete_sequence=["#22c55e", "#ef4444"])
         fig_late.update_layout(**PLOTLY_THEME_LAYOUT)
         st.plotly_chart(fig_late, use_container_width=True)
         
     st.subheader("Monthly Delivery Time Trend")
     df_filtered["order_month_dt"] = df_filtered["order_purchase_timestamp"].dt.to_period("M").dt.to_timestamp()
     monthly_del = df_filtered.groupby("order_month_dt")["delivery_days"].mean().reset_index()
-    fig_del_trend = px.line(monthly_del, x="order_month_dt", y="delivery_days", markers=True, color_discrete_sequence=["#f97316"])
+    fig_del_trend = px.line(monthly_del, x="order_month_dt", y="delivery_days", markers=True, color_discrete_sequence=["#3b82f6"])
     fig_del_trend.update_layout(**PLOTLY_THEME_LAYOUT)
     st.plotly_chart(fig_del_trend, use_container_width=True)
 
@@ -710,7 +712,7 @@ with footer_col1:
 with footer_col2:
     st.markdown(
         '<div style="text-align: right;">'
-        '<a href="https://github.com/Sharmaayush29/telco-churn-streamlit" class="footer-link">GitHub Codebase</a> | '
+        '<a href="https://github.com/Sharmaayush29/Customer-Churn-Prediction-System" class="footer-link">GitHub Codebase</a> | '
         '<a href="https://linkedin.com" class="footer-link">LinkedIn Profile</a>'
         '</div>',
         unsafe_allow_html=True

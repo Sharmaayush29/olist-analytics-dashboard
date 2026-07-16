@@ -1,7 +1,5 @@
 # 🛍️ Olist E-Commerce Analytics Dashboard
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://olist-analytics-dashboard.streamlit.app)
-
 A **production-grade Business Intelligence & ML platform** built on the Brazilian Olist E-Commerce Public Dataset.
 
 ---
@@ -125,5 +123,6 @@ olist-analytics-dashboard/
 **Ayush Sharma**  
 Data Scientist · ML Engineer · Streamlit Developer  
 ReadyNest Internship — Week 5 Project
+👉 **[Linkedwin profile](https://www.linkedin.com/in/ayush-sharma-014763319?utm_source=share_via&utm_content=profile&utm_medium=member_android/)**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Sharmaayush29-black?logo=github)](https://github.com/Sharmaayush29)

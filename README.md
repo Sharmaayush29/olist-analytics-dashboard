@@ -123,6 +123,6 @@ olist-analytics-dashboard/
 **Ayush Sharma**  
 Data Scientist · ML Engineer · Streamlit Developer  
 ReadyNest Internship — Week 5 Project
-👉 **[Linkedwin profile](https://www.linkedin.com/in/ayush-sharma-014763319?utm_source=share_via&utm_content=profile&utm_medium=member_android/)**
+👉 **[Linkedin profile](https://www.linkedin.com/in/ayush-sharma-014763319?utm_source=share_via&utm_content=profile&utm_medium=member_android/)**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Sharmaayush29-black?logo=github)](https://github.com/Sharmaayush29)

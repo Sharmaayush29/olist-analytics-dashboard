@@ -8,7 +8,7 @@ A **production-grade Business Intelligence & ML platform** built on the Brazilia
 
 ## 📊 Live Demo
 
-👉 **[Launch the Dashboard](https://olist-analytics-dashboard.streamlit.app)**
+👉 **[Launch the Dashboard](https://olist-analytics-dashboard-ayushsharma.streamlit.app/)**
 
 ---
 
